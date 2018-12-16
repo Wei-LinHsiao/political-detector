@@ -1,2 +1,4 @@
 # political-detector
-Model to detect American political party slanting
+Logistic regression model to detect American political party slanting.
+
+Data crawled from reddit.com.
