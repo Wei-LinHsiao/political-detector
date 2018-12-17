@@ -45,7 +45,7 @@ counter = 0
 # Save the ones with > a threshold of upvotes
 for subreddit in srd_demo:
     # Iterate through the top posts of subreddit
-    for srd in subreddit.top(limit = 1):
+    for srd in subreddit.top(limit = 100):
         # Repalce "More Comment" objects with comments
         # Tree depth limited to 5
         srd.comments.replace_more(limit = 5)
@@ -70,7 +70,7 @@ for subreddit in srd_demo:
 
 for subreddit in srd_repub:
     # Iterate through the top posts of subreddit
-    for srd in subreddit.top(limit = 1):
+    for srd in subreddit.top(limit = 100):
         # Repalce "More Comment" objects with comments
         # Tree depth limited to 5
         srd.comments.replace_more(limit = 5)
