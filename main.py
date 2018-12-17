@@ -12,6 +12,11 @@ import sklearn as sk
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
+from sklearn.model_selection import cross_val_score
+from sklearn.model_selection import GridSearchCV
+from sklearn import preprocessing
+from sklearn.metrics import classification_report
+
 
 # Global variables
 output_dir = "data"
@@ -57,88 +62,31 @@ for comment_id in data_repub:
 
 # Create corpus of TF-IDF vectors
 # Corpus is a sparse matrix; each row is a different document
-tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 2))
+tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 2), max_features = 5000)
 corpus = tfidf.fit_transform(corpus_raw.values())
 
+# Normalize each feature
+# Model performs better without normalization
+# corpus_scaled = preprocessing.scale(corpus.toarray())
+
 # Get a test-train split
-comment_train, comment_test, label_train, label_test = train_test_split(corpus, label, test_size=0.2)
+comment_train, comment_test, label_train, label_test = train_test_split(corpus, label, test_size = 0.2)
 
 # Run logistic regression, get coefficents
-model = LogisticRegression(class_weight = "balanced", penalty = "l2", C = 2, solver = "lbfgs", max_iter = 10000, fit_intercept = False)
+model = LogisticRegression(penalty = "l2", C = 0.5, solver = "sag", max_iter = 1000, tol = 10e-8 , fit_intercept = False)
 model.fit(comment_train, label_train)
+
+# Get Scoring Metrics
+label_predicted = model.predict(comment_test)
+
+print classification_report(label_test, label_predicted)
+print "Accuracy: ", sk.metrics.accuracy_score(label_test, label_predicted)
+print "F1 Score: ", sk.metrics.f1_score(label_test, label_predicted, pos_label = 0)
+
+# Get top 50 coresponding to Democrats, Republicans
 coef = model.coef_[0]
-
-# Get label for testing data
-label_test_pred = np.matmul(comment_test.toarray(), coef)
-
-# Get summary statistics on prediction
-def calculate_f1(true, predicted, threshold = 0, out = True):
-    """
-    Calculates the F1 score
-
-    :param true: the actual labels
-    :param predicted: predicted labels
-    :return: returns nothing, prints out F1 score
-    """
-    # Threshold the values
-    predicted_values = np.copy(predicted)
-    predicted_values[predicted_values > threshold] = 1
-    predicted_values[predicted_values <= threshold] = 0
-    tp = 0.0
-    tn = 0.0
-    fp = 0.0
-    fn = 0.0
-
-    for idx in range(0, len(true)):
-        # tp: both positive
-        if true[idx] == 1 and predicted_values[idx] == 1:
-            tp += 1
-        # tn; both negative
-        elif true[idx] == 0 and predicted_values[idx] == 0:
-            tn += 1
-        # fp: predicted 1 but 0
-        elif true[idx] == 0 and predicted_values[idx] == 1:
-            fp += 1
-        else:
-            fn += 1
-
-    # Return f1 score of zero if divide by zero
-    if (tp + fn) == 0 or (tp + fp) == 0:
-        return 0, threshold
-    # Get f1 score
-    recall = tp / (tp + fn)
-    precision = tp / (tp + fp)
-
-    f1 = 2 / ((1 / recall) + (1 / precision))
-
-    accuracy = (tp + tn) / (tp + tn + fp + fn)
-    if out:
-        print "F1 Score:", f1
-        print "Accuracy:", accuracy
-        print int(tp + tn), "correct out of", int(tp + tn + fp + fn)
-    return f1, threshold
-
-# Get the maximum F1-score and threshold
-max_thresh = 0.0
-max_f1 = 0.0
-
-for i in range(0, 600):
-    thresh = -3 + i / 100.0
-    f1, thresh = calculate_f1(label_test, label_test_pred, thresh, out = False)
-
-    if f1 > max_f1:
-        max_f1 = f1
-        max_thresh = thresh
-
-print "Results"
-print "Highest threshold is", max_thresh
-calculate_f1(label_test, label_test_pred, threshold = 0, out = True)
-
-
-# Get the 20 highest and 20 lowest coefficents, and their respective words
-# 1 is republican, 0 is democrat
-idx_max = (-coef).argsort()[:20]
-idx_min = (coef).argsort()[:20]
+idx_max = (-coef).argsort()[:50]
+idx_min = (coef).argsort()[:50]
 
 words_demo = []
 words_repub = []
@@ -153,9 +101,31 @@ for word_idx in idx_min:
     words_demo.append(feature_names[word_idx])
 
 print
-print "20 Words/ Vectors most associated with Democratic Party: "
+print "Words/ Phrases most associated with Democratic Party: "
 print words_demo
 print
 
-print "20 Words/ Vectors most associated with Republican Party: "
+print "Words/ Phrases most associated with Republican Party: "
 print words_repub
+
+# Grid search for best model
+# grid = [
+#     {'C': [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000], 'solver' : ['sag'], 'class_weight': ["balanced", None],
+#      'max_iter' : [10000], "fit_intercept" : [False], 'n_jobs': [-1]},
+# ]
+#
+# clf = GridSearchCV(LogisticRegression(), grid, cv=4, n_jobs = 3)
+# clf.fit(comment_train, label_train)
+#
+# print "Best parameters set found on development set:"
+# print
+# print clf.best_params_
+# print
+# print "Grid scores on development set:"
+# print
+# print "Detailed classification report:"
+# print
+# y_true, y_pred = label_test, clf.predict(comment_test)
+# print classification_report(y_true, y_pred)
+# print
+#
