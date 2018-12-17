@@ -57,14 +57,14 @@ for comment_id in data_repub:
 
 # Create corpus of TF-IDF vectors
 # Corpus is a sparse matrix; each row is a different document
-tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 3))
+tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 2))
 corpus = tfidf.fit_transform(corpus_raw.values())
 
 # Get a test-train split
 comment_train, comment_test, label_train, label_test = train_test_split(corpus, label, test_size=0.2)
 
 # Run logistic regression, get coefficents
-model = LogisticRegression(penalty = "l2", solver = "lbfgs", max_iter = 100, fit_intercept = False)
+model = LogisticRegression(class_weight = "balanced", penalty = "l2", C = 2, solver = "lbfgs", max_iter = 10000, fit_intercept = False)
 model.fit(comment_train, label_train)
 coef = model.coef_[0]
 
@@ -72,7 +72,7 @@ coef = model.coef_[0]
 label_test_pred = np.matmul(comment_test.toarray(), coef)
 
 # Get summary statistics on prediction
-def calculate_f1(true, predicted, threshold = 0):
+def calculate_f1(true, predicted, threshold = 0, out = True):
     """
     Calculates the F1 score
 
@@ -81,8 +81,9 @@ def calculate_f1(true, predicted, threshold = 0):
     :return: returns nothing, prints out F1 score
     """
     # Threshold the values
-    predicted[predicted > threshold] = 1
-    predicted[predicted <= threshold] = 0
+    predicted_values = np.copy(predicted)
+    predicted_values[predicted_values > threshold] = 1
+    predicted_values[predicted_values <= threshold] = 0
     tp = 0.0
     tn = 0.0
     fp = 0.0
@@ -90,17 +91,20 @@ def calculate_f1(true, predicted, threshold = 0):
 
     for idx in range(0, len(true)):
         # tp: both positive
-        if true[idx] == 1 and predicted[idx] == 1:
+        if true[idx] == 1 and predicted_values[idx] == 1:
             tp += 1
         # tn; both negative
-        elif true[idx] == 0 and predicted[idx] == 0:
+        elif true[idx] == 0 and predicted_values[idx] == 0:
             tn += 1
         # fp: predicted 1 but 0
-        elif true[idx] == 0 and predicted[idx] == 1:
+        elif true[idx] == 0 and predicted_values[idx] == 1:
             fp += 1
         else:
             fn += 1
 
+    # Return f1 score of zero if divide by zero
+    if (tp + fn) == 0 or (tp + fp) == 0:
+        return 0, threshold
     # Get f1 score
     recall = tp / (tp + fn)
     precision = tp / (tp + fp)
@@ -108,12 +112,27 @@ def calculate_f1(true, predicted, threshold = 0):
     f1 = 2 / ((1 / recall) + (1 / precision))
 
     accuracy = (tp + tn) / (tp + tn + fp + fn)
+    if out:
+        print "F1 Score:", f1
+        print "Accuracy:", accuracy
+        print int(tp + tn), "correct out of", int(tp + tn + fp + fn)
+    return f1, threshold
 
-    print "F1 Score:", f1
-    print "Accuracy:", accuracy
-    print int(tp + tn), "correct out of", int(tp + tn + fp + fn)
+# Get the maximum F1-score and threshold
+max_thresh = 0.0
+max_f1 = 0.0
 
-calculate_f1(label_test, label_test_pred)
+for i in range(0, 600):
+    thresh = -3 + i / 100.0
+    f1, thresh = calculate_f1(label_test, label_test_pred, thresh, out = False)
+
+    if f1 > max_f1:
+        max_f1 = f1
+        max_thresh = thresh
+
+print "Results"
+print "Highest threshold is", max_thresh
+calculate_f1(label_test, label_test_pred, threshold = 0, out = True)
 
 
 # Get the 20 highest and 20 lowest coefficents, and their respective words
