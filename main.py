@@ -3,7 +3,6 @@
 ## Runs regression
 
 ## Clean the raw comment data
-
 import json
 import os
 import re
@@ -58,12 +57,11 @@ for comment_id in data_repub:
 
 # Create corpus of TF-IDF vectors
 # Corpus is a sparse matrix; each row is a different document
-tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 2))
+tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 3))
 corpus = tfidf.fit_transform(corpus_raw.values())
 
 # Get a test-train split
 comment_train, comment_test, label_train, label_test = train_test_split(corpus, label, test_size=0.2)
-
 
 # Run logistic regression, get coefficents
 model = LogisticRegression(penalty = "l2", solver = "lbfgs", max_iter = 100, fit_intercept = False)
@@ -108,21 +106,37 @@ def calculate_f1(true, predicted, threshold = 0):
     precision = tp / (tp + fp)
 
     f1 = 2 / ((1 / recall) + (1 / precision))
-    print f1
-    print tp
-    print tn
-    print fp
-    print fn
+
+    accuracy = (tp + tn) / (tp + tn + fp + fn)
+
+    print "F1 Score:", f1
+    print "Accuracy:", accuracy
+    print int(tp + tn), "correct out of", int(tp + tn + fp + fn)
+
 calculate_f1(label_test, label_test_pred)
 
 
-# Get the 20 highest and 20 lowest coefficents
+# Get the 20 highest and 20 lowest coefficents, and their respective words
+# 1 is republican, 0 is democrat
+idx_max = (-coef).argsort()[:20]
+idx_min = (coef).argsort()[:20]
 
+words_demo = []
+words_repub = []
 
+feature_names = tfidf.get_feature_names()
 
+# Add the highest/ lowest coefficent word to their party prediction
+for word_idx in idx_max:
+    words_repub.append(feature_names[word_idx])
 
-# feature_names = tfidf.get_feature_names()
-# corpus_index = [n for n in corpus_raw]
-# rows, cols = corpus.nonzero()
-# #for row, col in zip(rows, cols):
-# #    print((feature_names[col], corpus_index[row]), corpus[row, col])
+for word_idx in idx_min:
+    words_demo.append(feature_names[word_idx])
+
+print
+print "20 Words/ Vectors most associated with Democratic Party: "
+print words_demo
+print
+
+print "20 Words/ Vectors most associated with Republican Party: "
+print words_repub
