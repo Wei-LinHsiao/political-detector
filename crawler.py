@@ -45,7 +45,7 @@ counter = 0
 # Save the ones with > a threshold of upvotes
 for subreddit in srd_demo:
     # Iterate through the top posts of subreddit
-    for srd in subreddit.top(limit = 100):
+    for srd in subreddit.top(limit = 1):
         # Repalce "More Comment" objects with comments
         # Tree depth limited to 5
         srd.comments.replace_more(limit = 5)
@@ -63,14 +63,14 @@ for subreddit in srd_demo:
             com_prop["text"] = comment.body
             com_prop["score"] = comment.score
             com_prop["time"] = comment.created_utc
-            com_prop["srd"] = comment.subreddit_id
+            com_prop["srd"] = comment.subreddit.display_name
 
             # Stored in party-corresponding dictionary by id
             com_demo[str(comment.id)] = com_prop
 
 for subreddit in srd_repub:
     # Iterate through the top posts of subreddit
-    for srd in subreddit.top(limit = 100):
+    for srd in subreddit.top(limit = 1):
         # Repalce "More Comment" objects with comments
         # Tree depth limited to 5
         srd.comments.replace_more(limit = 5)
@@ -88,7 +88,7 @@ for subreddit in srd_repub:
             com_prop["text"] = comment.body
             com_prop["score"] = comment.score
             com_prop["time"] = comment.created_utc
-            com_prop["srd"] = comment.subreddit_id
+            com_prop["srd"] = comment.subreddit.display_name
 
             # Stored in party-corresponding dictionary by id
             com_repub[str(comment.id)] = com_prop
