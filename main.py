@@ -9,6 +9,7 @@ import re
 import string
 import numpy as np
 import sklearn as sk
+import csv
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.linear_model import LogisticRegression
 from sklearn.model_selection import train_test_split
@@ -23,6 +24,7 @@ output_dir = "data"
 # Input data files
 fp_data_clean_demo = os.path.join(output_dir, "data_demo_clean.json")
 fp_data_clean_repub = os.path.join(output_dir, "data_repub_clean.json")
+coef_out = os.path.join(output_dir, "coef.csv")
 
 data_demo = {}
 data_repub = {}
@@ -108,6 +110,23 @@ print
 print "Words/ Phrases most associated with Republican Party: "
 print words_repub
 
+# Create a dictionary for output of words
+output_words = []
+
+# Put all coef in a table
+# coefficent, value
+for idx in range(0, len(coef)):
+    row = [feature_names[idx], coef[idx]]
+    output_words.append(row)
+
+# Write coefficent to spreadsheet
+with open(coef_out, "w+") as csv_file:
+    spreadsheet = csv.writer(csv_file, delimiter=',')
+
+    for row in output_words:
+        spreadsheet.writerow(row)
+
+    csv_file.close()
 # Grid search for best model
 # grid = [
 #     {'C': [0.0001, 0.001, 0.01, 0.1, 1, 10, 100, 1000, 10000], 'solver' : ['sag'], 'class_weight': ["balanced", None],
