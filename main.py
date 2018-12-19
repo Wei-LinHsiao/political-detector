@@ -64,7 +64,7 @@ for comment_id in data_repub:
 
 # Create corpus of TF-IDF vectors
 # Corpus is a sparse matrix; each row is a different document
-tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 2), max_features = 5000)
+tfidf = TfidfVectorizer(stop_words = 'english', ngram_range = (1, 3), max_features = 5000)
 corpus = tfidf.fit_transform(corpus_raw.values())
 
 # Normalize each feature
@@ -120,7 +120,7 @@ for idx in range(0, len(coef)):
     output_words.append(row)
 
 # Write coefficent to spreadsheet
-with open(coef_out, "w+") as csv_file:
+with open(coef_out, "wb+") as csv_file:
     spreadsheet = csv.writer(csv_file, delimiter=',')
 
     for row in output_words:
