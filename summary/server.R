@@ -12,7 +12,9 @@ comments <- read.csv("comments.csv")
 colnames(coef) <- c("Phrase", "Coefficent")
 
 # Adjust last column to UNIX timestamp column
-comments <- comments %>% mutate(Timestamp = as.POSIXct(Timestamp, origin="1970-01-01", tz = "UTC"))
+comments <- comments %>%
+  mutate(`Timestamp (UTC)` = as.POSIXct(Timestamp, origin="1970-01-01", tz = "UTC")) %>%
+  mutate(Timestamp = NULL)
 
 
 shinyServer(function(input, output) {

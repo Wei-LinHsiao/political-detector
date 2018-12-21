@@ -24,14 +24,17 @@ shinyUI(fluidPage(
            downloadButton("downloadCom", "All Comments (CSV)"),
            br(),
            br(),
-           downloadButton("demJSON", "Demo Comments (JSON)"),
+           downloadButton("demJSON", "D Comments (JSON)"),
            br(),
            br(),
-           downloadButton("repubJSON", "Repub Spreadsheet (JSON)"),
-           width = 3
+           downloadButton("repubJSON", "R Comments (JSON)"),
+           width = 2
          ),
          mainPanel(
-           includeMarkdown("landing.md")
+           column(
+            includeMarkdown("landing.md"),
+            width = 8
+           )
          )
       ),
       # Landing Page, Download
