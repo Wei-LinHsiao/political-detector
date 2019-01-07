@@ -14,26 +14,27 @@ shinyUI(fluidPage(
       "",
       # Landing Page, Download
       tabPanel("Data",
-         sidebarPanel(
-           "Dataset Download", 
-           br(),
-           br(),
-           downloadButton("downloadCoef", "Coefficents"),
-           br(),
-           br(),
-           downloadButton("downloadCom", "All Comments (CSV)"),
-           br(),
-           br(),
-           downloadButton("demJSON", "D Comments (JSON)"),
-           br(),
-           br(),
-           downloadButton("repubJSON", "R Comments (JSON)"),
-           width = 2
-         ),
+         
          mainPanel(
            column(
             includeMarkdown("landing.md"),
             width = 8
+           ),
+           sidebarPanel(
+             "Dataset Download", 
+             br(),
+             br(),
+             downloadButton("downloadCoef", "Coefficents"),
+             br(),
+             br(),
+             downloadButton("downloadCom", "All Comments (CSV)"),
+             br(),
+             br(),
+             downloadButton("demJSON", "D Comments (JSON)"),
+             br(),
+             br(),
+             downloadButton("repubJSON", "R Comments (JSON)"),
+             width = 4
            )
          )
       ),
